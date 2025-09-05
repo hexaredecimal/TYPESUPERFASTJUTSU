@@ -12,8 +12,6 @@
 
 https://github.com/user-attachments/assets/dcf9b757-1317-40f1-88b5-000810d5c392
 
-
-
 ## Why?
 Cool streamers have screen-reader software that allows them to show the keys they are typing on screen. 
 I wanted that but with a better visual appeal
@@ -31,6 +29,12 @@ $ gcc nob.c -o nob
 # Build the final executable
 $ ./nob
 ```
+
+
+## Old Version
+This version is a port and improvement of my first [attempt](https://github.com/hexaredecimal/TYPESUPERFASTJUTSU.OLD) at this program. 
+Previously I used rust but it was clunky and not fun to develop.
+
 
 ## Rerefences
 - [nob.h](https://github.com/tsoding/nob.h)
