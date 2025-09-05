@@ -8,6 +8,11 @@
 >> A keylogger for x11 that captures the global keypresses on your keyboard and turn them into a cool
 >> naruto hand sign animation while leaking them to the screen.
 
+<div style="color:red">
+[Note]: This may leak your passwords to your observers. Do not enter sensitive information while this application is being observed by someone.
+Stay safe and take care. 
+</div>
+
 ## Preview
 
 https://github.com/user-attachments/assets/dcf9b757-1317-40f1-88b5-000810d5c392
