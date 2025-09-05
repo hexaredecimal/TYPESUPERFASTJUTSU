@@ -9,7 +9,7 @@
 >> naruto hand sign animation while leaking them to the screen.
 
 <div style="color:red">
-[Note]: This may leak your passwords to your observers. Do not enter sensitive information while this application is being observed by someone.
+❗️❗❗❗[Note]❗❗❗❗: This may leak your passwords to your observers. Do not enter sensitive information while this application is being observed by someone.
 Stay safe and take care. 
 </div>
 
