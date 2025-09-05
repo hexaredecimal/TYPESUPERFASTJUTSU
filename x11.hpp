@@ -1,3 +1,10 @@
+
+#include <unordered_map>
+
+#include <cstdlib>
+#include <sstream>
+#include <string>
+
 namespace X11Lib {
 extern "C" {
 #include <X11/Xlib.h>
@@ -7,53 +14,83 @@ extern "C" {
 #include <stdio.h>
 }
 
-#include <sstream>
-#include <string>
-#include <cstdlib>
-
-
 static Display *lookup_display = NULL;
 static std::stringstream output;
 static int selectedIndex = 0;
+static int maxIndex = 0;
+static std::unordered_map<int, std::string> keymap;
 
 #define SPACE 65
 #define BACKSPACE 22
 
 // Ignored Symbols
-#define CTRL 37
-#define SHIFT 50
+#define CTRL_L 37
+#define CTRL_R 105
+#define SHIFT_L 50
+#define SHIFT_R 62
 #define CAPS_LOCK 66
 #define TAB 23
 #define INSERT 118
 #define HOME 110
 #define PRIOR 115
 #define NEXT 117
+#define PERIOD 60
+#define COMMA 59
+#define SLASH 61
+#define EQUAL 21
+#define MINUS 20
+#define BRACKETL 34
+#define BRACKETR 35
+#define SEMICOLON 47
+#define BACKSLASH 51
+#define APOSTROPHE 48
+#define GRAVE 49
+#define SUPER_L 133
+#define SUPER_R 134
+#define ALT_L 64
+#define ALT_R 108
 #define ESCAPE 9 // Raylib uses this to exit btw
 
-int getRandomNumber(int high) {
-    return rand() % high;
+int getRandomNumber(int high) { return rand() % high; }
+
+static void initializeKeyMap() {
+  keymap[CTRL_L] = "CTRL-L";
+  keymap[CTRL_R] = "CTRL-R";
+  keymap[SHIFT_L] = "SHIFT-L";
+  keymap[SHIFT_R] = "SHIFT-R";
+  keymap[CAPS_LOCK] = "CL";
+  keymap[TAB] = "[TB]";
+  keymap[INSERT] = "";
+  keymap[HOME] = "";
+  keymap[PRIOR] = "";
+  keymap[NEXT] = "";
+  keymap[PERIOD] = ".";
+  keymap[COMMA] = ",";
+  keymap[SLASH] = "/";
+  keymap[EQUAL] = "=";
+  keymap[MINUS] = "-";
+  keymap[ESCAPE] = "ESC";
+  keymap[SPACE] = " ";
+  keymap[BACKSPACE] = "[bs]";
+  keymap[BRACKETL] = "[";
+  keymap[BRACKETR] = "]";
+  keymap[SEMICOLON] = ";";
+  keymap[BACKSLASH] = "/";
+  keymap[APOSTROPHE] = "'";
+  keymap[GRAVE] = "`";
+  keymap[SUPER_L] = "SUPER";
+  keymap[SUPER_R] = "SUPER";
+  keymap[ALT_L] = "ALT";
+  keymap[ALT_R] = "ALT";
 }
 
-static bool should_key_be_ignored(int code) {
-    return CTRL == code || SHIFT == code || CAPS_LOCK == code || TAB == code ||
-           INSERT == code || HOME == code || PRIOR == code || NEXT == code;
+static void writeKey(int keycode, char *keyname) {
+  if (keymap.find(keycode) != keymap.end()) {
+    output << keymap[keycode];
+  } else {
+    output << keyname;
+  }
 }
-
-static void writeKey(int keycode, char* keyname) {
-    if (!should_key_be_ignored(keycode)) {
-        switch (keycode) {
-        case SPACE:
-            output << "[_]";
-	    break;
-        case BACKSPACE:
-            output << "[" << keyname <<"]";
-	    break;
-        default:
-            output << keyname;
-        }
-    }
-}
-
 
 static void event_callback(XPointer priv, XRecordInterceptData *hook) {
   if (hook->category == XRecordFromServer) {
@@ -66,13 +103,13 @@ static void event_callback(XPointer priv, XRecordInterceptData *hook) {
       char *keyname = XKeysymToString(keysym);
 
       if (event_type == KeyPress) {
-        /*if (keyname)
+        /*
+        if (keyname)
           printf("KeyPress: %s -> %d\n", keyname, keycode);
         else
-          printf("KeyPress: [keycode %d]\n", keycode);
-        */
+          printf("KeyPress: [keycode %d]\n", keycode); */
         writeKey(keycode, keyname);
-        selectedIndex = getRandomNumber(14);
+        selectedIndex = getRandomNumber(maxIndex);
       } else {
         /*
         if (keyname)
@@ -87,6 +124,5 @@ static void event_callback(XPointer priv, XRecordInterceptData *hook) {
 
   XRecordFreeData(hook);
 }
-
 
 } // namespace X11Lib
