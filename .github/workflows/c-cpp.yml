@@ -13,6 +13,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake make gcc libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev
+
+    - name: Build raylib
+      run: |
+        git clone https://github.com/raysan5/raylib.git --depth=1
+        cd raylib/src
+        make PLATFORM=PLATFORM_DESKTOP
+        sudo make install
+      
     - name: pre-build
       run: gcc nob.c -o nob
     - name: build
