@@ -1,3 +1,5 @@
+#include <iostream>
+#include <ostream>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,10 +11,18 @@
 #include "raylib.hpp"
 #include "x11.hpp"
 
+#include "fs.hpp"
+
 constexpr int WIDTH = 200;
 constexpr int HEIGHT = 200;
 constexpr float SCALE = 0.1;
 
+typedef struct {
+  char *narutoCharacter;
+  char *imagePath;
+  int bgColor;
+  int textColor;
+} Config;
 
 
 int main(void) {
@@ -82,16 +92,23 @@ int main(void) {
     return 1;
   }
 
+
+  X11Lib::initializeKeyMap();
+
   Raylib::InitWindow(WIDTH, HEIGHT, "Hello, from raylib");
   Raylib::SetTargetFPS(60);
 
   std::vector<Raylib::Texture2D> images;
-  auto images_path = "./images/";
-  for (int i = 1; i <= 14; ++i) {
-    std::stringstream pathStream;
-    pathStream << images_path << "frame" << i << ".png";
-    std::string path = pathStream.str();
-    images.push_back(Raylib::LoadTexture(path.c_str()));
+  std::vector<std::string> imagePaths;
+  std::string images_path = "./images/sasuke/";
+  if (!Fs::getImagesInPath(images_path, imagePaths, ".png"))
+    return 1;
+
+  X11Lib::maxIndex = imagePaths.size();
+  for (auto imagePath : imagePaths) {
+    std::cout << imagePath << std::endl;
+    auto path = imagePath.c_str();
+    images.push_back(Raylib::LoadTexture(path));
   }
 
   Raylib::Texture2D firstTexture = images[X11Lib::selectedIndex];
@@ -103,7 +120,6 @@ int main(void) {
   Raylib::Rectangle sourceRec = {
       .x = 0.0f, .y = 0.0f, .width = frameWidth, .height = frameHeight};
 
-
   Raylib::Rectangle destRec = {.x = WIDTH / 2,
                                .y = HEIGHT / 2,
                                .width = frameWidth / 5.0f,
@@ -114,7 +130,7 @@ int main(void) {
   int fontSize = 18;
 
   int boxStartX = 10;
-  int boxStartY = HEIGHT - (HEIGHT * 0.20);;
+  int boxStartY = HEIGHT - (HEIGHT * 0.20);
   int boxHeight = fontSize + 10;
   int boxWidth = WIDTH - 2 * boxStartX;
 
@@ -124,9 +140,10 @@ int main(void) {
 
     auto output = X11Lib::output.str();
     int textWidth = Raylib::MeasureText(output.c_str(), fontSize);
-    while (textWidth > boxWidth - 10 && !output.empty()) { // 5px padding each side
-        output.erase(0, 1); // drop leftmost character
-        textWidth = Raylib::MeasureText(output.c_str(), fontSize);
+    while (textWidth > boxWidth - 10 &&
+           !output.empty()) { // 5px padding each side
+      output.erase(0, 1);     // drop leftmost character
+      textWidth = Raylib::MeasureText(output.c_str(), fontSize);
     }
 
     Raylib::BeginDrawing();
@@ -137,9 +154,12 @@ int main(void) {
                            Raylib::WHITE);
 
     Raylib::DrawText("[", boxStartX, boxStartY, fontSize, Raylib::WHITE);
-    Raylib::DrawText("]", boxStartX + boxWidth - Raylib::MeasureText("]", fontSize), boxStartY, fontSize, Raylib::WHITE);
+    Raylib::DrawText("]",
+                     boxStartX + boxWidth - Raylib::MeasureText("]", fontSize),
+                     boxStartY, fontSize, Raylib::WHITE);
 
-    int textX = boxStartX + boxWidth - textWidth - Raylib::MeasureText("]", fontSize) - 5; // 5px padding
+    int textX = boxStartX + boxWidth - textWidth -
+                Raylib::MeasureText("]", fontSize) - 5; // 5px padding
     DrawText(output.c_str(), textX, boxStartY, fontSize, Raylib::WHITE);
 
     Raylib::EndDrawing();
