@@ -1,4 +1,10 @@
 # TYPESUPERFASTJUTSU
+<div align="center">
+  
+  [![C/C++ CI](https://github.com/hexaredecimal/TYPESUPERFASTJUTSU/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/hexaredecimal/TYPESUPERFASTJUTSU/actions/workflows/c-cpp.yml)
+
+</div>
+
 >> A keylogger for x11 that captures the global keypresses on your keyboard and turn them into a cool
 >> naruto hand sign animation while leaking them to the screen.
 
