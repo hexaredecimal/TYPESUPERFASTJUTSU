@@ -14,6 +14,7 @@ int main(int argc, char** argv) {
   nob_cmd_append(&cmd, "g++");
   nob_cmd_append(&cmd, "-std=c++17");
   nob_cmd_append(&cmd, "main.cpp");
+  nob_cmd_append(&cmd, "ini.c");
   nob_cmd_append(&cmd, "-o");
   nob_cmd_append(&cmd, BUILD_PATH"typesuperfast");
   nob_cmd_append(&cmd, "-lX11");
