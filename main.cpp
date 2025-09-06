@@ -1,31 +1,65 @@
 #include <iostream>
 #include <ostream>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <sstream>
 #include <string>
 #include <vector>
-
 
 #include "raylib.hpp"
 #include "x11.hpp"
 
 #include "fs.hpp"
 
-constexpr int WIDTH = 200;
-constexpr int HEIGHT = 200;
-constexpr float SCALE = 0.1;
+#include "ini.h"
 
 typedef struct {
-  char *narutoCharacter;
+  char *character;
   char *imagePath;
-  int bgColor;
-  int textColor;
+  char *title;
+  int width;
+  int height;
 } Config;
 
+char *strip(char *str) {
+  size_t len = strlen(str);
+  if (len >= 2 && str[0] == '"' && str[len - 1] == '"') {
+    str[len - 1] = '\0'; // remove trailing "
+    return str + 1;      // skip leading "
+  }
+  return str; // no quotes
+}
+
+static int handler(void *user, const char *section, const char *name,
+                   const char *value) {
+  Config *pconfig = (Config *)user;
+
+#define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+  if (MATCH("window", "width")) {
+    pconfig->width = atoi(value);
+  } else if (MATCH("window", "height")) {
+    pconfig->height = atoi(value);
+  } else if (MATCH("window", "title")) {
+    pconfig->title = strip(strdup(value));
+  } else if (MATCH("animation", "character")) {
+    pconfig->character = strip(strdup(value));
+  } else if (MATCH("animation", "imagesPath")) {
+    pconfig->imagePath = strip(strdup(value));
+  } else {
+    std::cerr << "Invalid: Section: " << section << " field: " << name << "\n";
+    return 0;
+  }
+
+  return 1;
+}
 
 int main(void) {
+  Config config = {0};
+
+  if (ini_parse("./config.ini", handler, &config) < 0) {
+    std::cerr << "Can't load 'test.ini'" << std::endl;
+    return 1;
+  }
+
   srand(time(NULL));
   X11Lib::Display *ctrl_display, *data_display;
   X11Lib::XRecordRange *range;
@@ -35,27 +69,27 @@ int main(void) {
   // Open two independent display connections
   ctrl_display = X11Lib::XOpenDisplay(NULL);
   if (!ctrl_display) {
-    fprintf(stderr, "Cannot open control display\n");
+    std::cerr << "Cannot open control display\n" << std::endl;
     return 1;
   }
 
   data_display = X11Lib::XOpenDisplay(NULL);
   if (!data_display) {
-    fprintf(stderr, "Cannot open data display\n");
+    std::cerr << "Cannot open data display\n" << std::endl;
     XCloseDisplay(ctrl_display);
     return 1;
   }
 
   X11Lib::lookup_display = X11Lib::XOpenDisplay(NULL);
   if (!X11Lib::lookup_display) {
-    fprintf(stderr, "Cannot open lookup display for key translation\n");
+    std::cerr << "Cannot open lookup display for key translation" << std::endl;
     return 1;
   }
 
   // Check if RECORD extension is available
   int major, minor;
   if (!XRecordQueryVersion(ctrl_display, &major, &minor)) {
-    fprintf(stderr, "XRecord extension not available\n");
+    std::cerr << "XRecord extension not available" << std::endl;
     XCloseDisplay(ctrl_display);
     XCloseDisplay(data_display);
     return 1;
@@ -67,7 +101,7 @@ int main(void) {
   // Capture KeyPress + KeyRelease
   range = X11Lib::XRecordAllocRange();
   if (!range) {
-    fprintf(stderr, "Failed to allocate XRecordRange\n");
+    std::cerr << "Failed to allocate XRecordRange" << std::endl;
     return 1;
   }
   range->device_events.first = KeyPress;
@@ -75,32 +109,40 @@ int main(void) {
 
   ctx = XRecordCreateContext(ctrl_display, 0, &clients, 1, &range, 1);
   if (!ctx) {
-    fprintf(stderr, "Failed to create XRecord context\n");
+    std::cerr << "Failed to create XRecord context" << std::endl;
     return 1;
   }
 
   // Flush control display so context is created
   XSync(ctrl_display, False);
 
-  printf("Listening for global key events...\n");
+  std::cout << "Listening for global key events...\n" << std::endl;
   fflush(stdout);
 
   // Enable context on the data display
   if (!XRecordEnableContextAsync(data_display, ctx, X11Lib::event_callback,
                                  NULL)) {
-    fprintf(stderr, "Failed to enable XRecord context\n");
+    std::cout << "Failed to enable XRecord context\n" << std::endl;
     return 1;
   }
 
-
   X11Lib::initializeKeyMap();
 
-  Raylib::InitWindow(WIDTH, HEIGHT, "Hello, from raylib");
+  const int WIDTH = config.width;
+  const int HEIGHT = config.height;
+  const float SCALE = 0.1;
+
+  Raylib::InitWindow(WIDTH, HEIGHT, config.title);
   Raylib::SetTargetFPS(60);
 
   std::vector<Raylib::Texture2D> images;
   std::vector<std::string> imagePaths;
-  std::string images_path = "./images/sasuke/";
+
+  char buffer[256] = "";
+  std::stringstream ss;
+  ss << config.imagePath << "/" << config.character << "/";
+
+  std::string images_path(ss.str());
   if (!Fs::getImagesInPath(images_path, imagePaths, ".png"))
     return 1;
 
@@ -116,12 +158,11 @@ int main(void) {
   float frameWidth = static_cast<float>(firstTexture.width);
   float frameHeight = static_cast<float>(firstTexture.height);
 
-
   Raylib::Rectangle sourceRec = {
       .x = 0.0f, .y = 0.0f, .width = frameWidth, .height = frameHeight};
 
-  Raylib::Rectangle destRec = {.x = WIDTH / 2,
-                               .y = HEIGHT / 2,
+  Raylib::Rectangle destRec = {.x = static_cast<float>(WIDTH) / 2.0f,
+                               .y = static_cast<float>(HEIGHT) / 2.0f,
                                .width = frameWidth / 5.0f,
                                .height = frameHeight / 5.0f};
 
