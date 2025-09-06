@@ -1,9 +1,9 @@
 
 #include <unordered_map>
 
-#include <cstdlib>
 #include <sstream>
 #include <string>
+#include <bits/stdc++.h>
 
 namespace X11Lib {
 extern "C" {
@@ -11,7 +11,6 @@ extern "C" {
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/record.h>
 #include <X11/keysym.h>
-#include <stdio.h>
 }
 
 static Display *lookup_display = NULL;
@@ -19,6 +18,10 @@ static std::stringstream output;
 static int selectedIndex = 0;
 static int maxIndex = 0;
 static std::unordered_map<int, std::string> keymap;
+static bool uppercase = false;
+
+
+#define PADD(str) " " str " "
 
 #define SPACE 65
 #define BACKSPACE 22
@@ -49,17 +52,25 @@ static std::unordered_map<int, std::string> keymap;
 #define SUPER_R 134
 #define ALT_L 64
 #define ALT_R 108
+#define RETURN 36
 #define ESCAPE 9 // Raylib uses this to exit btw
 
 int getRandomNumber(int high) { return rand() % high; }
 
 static void initializeKeyMap() {
-  keymap[CTRL_L] = "CTRL-L";
-  keymap[CTRL_R] = "CTRL-R";
-  keymap[SHIFT_L] = "SHIFT-L";
-  keymap[SHIFT_R] = "SHIFT-R";
-  keymap[CAPS_LOCK] = "CL";
-  keymap[TAB] = "[TB]";
+  keymap[CTRL_L] = PADD("CTRL");
+  keymap[CTRL_R] = PADD("CTRL");
+  keymap[SHIFT_L] = PADD("SHIFT");
+  keymap[SHIFT_R] = PADD("SHIFT");
+  keymap[CAPS_LOCK] = PADD("CL");
+  keymap[BACKSPACE] = PADD("[bs]");
+  keymap[SUPER_L] = PADD("SUPER");
+  keymap[SUPER_R] = PADD("SUPER");
+  keymap[ALT_L] = PADD("ALT");
+  keymap[ALT_R] = PADD("ALT");
+  keymap[RETURN] = PADD("[ENTER]");
+  
+  keymap[TAB] = "    ";
   keymap[INSERT] = "";
   keymap[HOME] = "";
   keymap[PRIOR] = "";
@@ -71,22 +82,26 @@ static void initializeKeyMap() {
   keymap[MINUS] = "-";
   keymap[ESCAPE] = "ESC";
   keymap[SPACE] = " ";
-  keymap[BACKSPACE] = "[bs]";
   keymap[BRACKETL] = "[";
   keymap[BRACKETR] = "]";
-  keymap[SEMICOLON] = ";";
+  keymap[SEMICOLON] = ");";
   keymap[BACKSLASH] = "/";
   keymap[APOSTROPHE] = "'";
   keymap[GRAVE] = "`";
-  keymap[SUPER_L] = "SUPER";
-  keymap[SUPER_R] = "SUPER";
-  keymap[ALT_L] = "ALT";
-  keymap[ALT_R] = "ALT";
 }
 
 static void writeKey(int keycode, char *keyname) {
   if (keymap.find(keycode) != keymap.end()) {
-    output << keymap[keycode];
+    if (keycode == CAPS_LOCK) {
+      uppercase = !uppercase;
+    }
+
+    auto key = keymap[keycode];
+    if (uppercase) {
+      transform(key.begin(), key.end(), key.begin(),
+              ::toupper);
+    }
+    output << key;
   } else {
     output << keyname;
   }
